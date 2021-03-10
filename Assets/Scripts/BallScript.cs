@@ -39,6 +39,6 @@ public class BallScript : MonoBehaviour
 
     void FixedUpdate()
     {
-        Interact();
+
     }
 }

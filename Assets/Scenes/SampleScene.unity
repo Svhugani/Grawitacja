@@ -418,7 +418,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ab8349f775486544a7e78852ffdec90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxNumOfBalls: 250
+  _maxNumOfBalls: 100
+  _numOfBallsToSplit: 25
   ballPrefab: {fileID: 6552826867787703664, guid: cfeb2bc93c01c9f44a4ced34ef9ac39a,
     type: 3}
   bound: {fileID: 0}
