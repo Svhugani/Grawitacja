@@ -14,6 +14,7 @@ public class GameManagerScript : MonoBehaviour
     public GameObject rightBound;
     public GameObject leftBound;
     private List<BallScript> _listOfActiveBalls;
+    private List<BallScript> _iterateOverBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
     private float _gravityConstant = .05f;
@@ -76,32 +77,38 @@ public class GameManagerScript : MonoBehaviour
         // because of discrete collision detection
         
         Vector3 distVec = attractorRb.position - ballRb.position;
-        float magnitude = distVec.sqrMagnitude + 0.001f; 
+        float magnitude = distVec.sqrMagnitude; 
         return (attractorRb.mass / (magnitude * Mathf.Sqrt(magnitude))) * distVec;
         
         
     }
 
 
-    private Vector3 TotalGravity(Rigidbody ballRb)
+    private Vector3 TotalGravity(BallScript ballSc)
     {
         Vector3 totalForce = Vector3.zero;
-        foreach ( BallScript otherBallRb in  _listOfActiveBalls)
+        Rigidbody ballRb = ballSc.BallRigidBody;
+
+        _iterateOverBalls.Remove(ballSc);
+
+        foreach ( BallScript otherBallRb in  _iterateOverBalls)
         {
 
             totalForce += PartialGravity(ballRb, otherBallRb.BallRigidBody);
             
         }
+        _iterateOverBalls.Add(ballSc);
         totalForce = _gravityConstant * ballRb.mass * totalForce;
         return totalForce;
     }
 
     private void SystemGravity()
     {
-        foreach (BallScript ballRb in _listOfActiveBalls)
+        foreach (BallScript ballSc in _listOfActiveBalls)
         {
-            Rigidbody rb = ballRb.BallRigidBody;
-            rb.AddForce(TotalGravity(rb));
+            //Rigidbody rb = ballSc.BallRigidBody;
+            //rb.AddForce(TotalGravity(ballSc));
+            ballSc.Interact(TotalGravity(ballSc));
             //ballRb.BallRigidBody.AddForce(TotalGravity(ballRb.BallRigidBody));
             //ballRb.Interact(TotalGravity(ballRb.BallRigidBody));
         }
@@ -159,7 +166,7 @@ public class GameManagerScript : MonoBehaviour
         }    
     }
 
-    private void ActivateBalls()
+    private void ActivateBall()
     {
         if (_listOfDeactivatedBalls.Count > 0)
         {
@@ -172,11 +179,21 @@ public class GameManagerScript : MonoBehaviour
         }
     }
 
+    public void DectivateBall( BallScript bs)
+    {
+        _listOfActiveBalls.Remove(bs);
+        bs.SetStatusActive(false);
+        _listOfDeactivatedBalls.Add(bs);
+        _numOfActiveBalls --;
+        _numOfDeactivatedBalls ++;
+    }
+
     void Awake() 
     {
         cam = Camera.main;
         _listOfActiveBalls = new List<BallScript>();
         _listOfDeactivatedBalls = new List<BallScript>();
+        _iterateOverBalls = new List<BallScript>();
         GenerateBalls();
         //EnableCollision(false);
         BoundSetup();
@@ -186,9 +203,9 @@ public class GameManagerScript : MonoBehaviour
     void Start()
     {
         
-        InvokeRepeating("ActivateBalls", 0.5f, 0.1f);
+        InvokeRepeating("ActivateBall", 0.5f, 0.1f);
         InvokeRepeating("PrintInfo", 0f, 4f);
-        Physics.IgnoreLayerCollision(8, 8);
+        //Physics.IgnoreLayerCollision(8, 8);
 
     }
 
