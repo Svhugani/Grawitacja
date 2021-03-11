@@ -75,9 +75,10 @@ public class GameManagerScript : MonoBehaviour
         // Without this the adding force becomes extremely strong and we have jumps over colliders
         // because of discrete collision detection
         
-        Vector3 distVec = attractorRb.transform.position - ballRb.transform.position;
+        Vector3 distVec = attractorRb.position - ballRb.position;
         float magnitude = distVec.sqrMagnitude + 0.001f; 
         return (attractorRb.mass / (magnitude * Mathf.Sqrt(magnitude))) * distVec;
+        
         
     }
 
@@ -99,7 +100,10 @@ public class GameManagerScript : MonoBehaviour
     {
         foreach (BallScript ballRb in _listOfActiveBalls)
         {
-            ballRb.BallRigidBody.AddForce(TotalGravity(ballRb.BallRigidBody));
+            Rigidbody rb = ballRb.BallRigidBody;
+            rb.AddForce(TotalGravity(rb));
+            //ballRb.BallRigidBody.AddForce(TotalGravity(ballRb.BallRigidBody));
+            //ballRb.Interact(TotalGravity(ballRb.BallRigidBody));
         }
     }
 
@@ -182,8 +186,8 @@ public class GameManagerScript : MonoBehaviour
     void Start()
     {
         
-        InvokeRepeating("ActivateBalls", 0.5f, 0.25f);
-        InvokeRepeating("PrintInfo", 0f, 2f);
+        InvokeRepeating("ActivateBalls", 0.5f, 0.1f);
+        InvokeRepeating("PrintInfo", 0f, 4f);
         Physics.IgnoreLayerCollision(8, 8);
 
     }

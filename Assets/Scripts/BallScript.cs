@@ -30,9 +30,9 @@ public class BallScript : MonoBehaviour
         set {_mass = value;}
     }
 
-    public void Interact()
+    public void Interact(Vector3 force)
     {
-        _rigidbody.AddForce(_globalForce);
+        _rigidbody.AddForce(force);
     }
 
     public void SetStatusActive(bool status)
