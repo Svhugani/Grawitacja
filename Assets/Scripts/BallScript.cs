@@ -42,11 +42,15 @@ public class BallScript : MonoBehaviour
     
     void OnCollisionEnter(Collision collision)
     {
-        if ( _rigidbody.mass > collision.collider.gameObject.GetComponent<Rigidbody>().mass)
-        {
+        //if ( _rigidbody.mass > collision.collider.gameObject.GetComponent<Rigidbody>().mass)
+        //{
 
+        //}
+        
+        if (collision.collider.gameObject.layer == 0)
+        {
+            Debug.Log("COLLISION !");   
         }
-        //Debug.Log("COLLISION !");
     }
 
     void OnTriggerEnter(Collider other)

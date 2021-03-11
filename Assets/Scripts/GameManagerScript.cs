@@ -9,7 +9,10 @@ public class GameManagerScript : MonoBehaviour
     private int _numOfActiveBalls = 0;
     private int _numOfDeactivatedBalls = 0;
     public GameObject ballPrefab;
-    public GameObject bound;
+    public GameObject upperBound;
+    public GameObject lowerBound;
+    public GameObject rightBound;
+    public GameObject leftBound;
     private List<BallScript> _listOfActiveBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
@@ -23,25 +26,57 @@ public class GameManagerScript : MonoBehaviour
 
     private void BoundSetup()
     {   
-        Renderer rend = bound.GetComponent<Renderer>();
-        Vector3 boundsize = rend.bounds.size;
-        Debug.Log("Bound size: " + boundsize.ToString());
+        // Set up bounding scene depending on your screen resolution / ratio.
+        // Bounds are build out of 4 initial cubes placed in the center of the scene
+        // Assumption: all initial bounds are cubes. Thus, they have the same scales
+
+        Renderer rend = upperBound.GetComponent<Renderer>();
+        Vector3 boundSize = rend.bounds.size;
+        Vector3 boundScale;
 
         if (cam)
         {
             float xScale = cam.ViewportToWorldPoint(new Vector3(1, 0, 0)).x - cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).x;
             float yScale = cam.ViewportToWorldPoint(new Vector3(0, 1, 0)).y - cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).y;
-            Vector3 boundScale = bound.transform.localScale;
+
+            float worldUp = cam.ViewportToWorldPoint(new Vector3(0, 1, 0)).y;
+            float worldDown = cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).y;
+            float worldLeft = cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).x;
+            float worldRight = cam.ViewportToWorldPoint(new Vector3(1, 0, 0)).x;
+
+            boundScale = upperBound.transform.localScale;
             boundScale.x = xScale;
+            upperBound.transform.localScale = boundScale;
+            upperBound.transform.position = new Vector3(0, worldUp + boundSize.y / 2, 0);
+
+            boundScale = lowerBound.transform.localScale;
+            boundScale.x = xScale;
+            lowerBound.transform.localScale = boundScale;
+            lowerBound.transform.position = new Vector3(0, worldDown - boundSize.y / 2, 0);
+
+            boundScale = leftBound.transform.localScale;
             boundScale.y = yScale;
-            bound.transform.localScale = boundScale;
+            leftBound.transform.localScale = boundScale;
+            leftBound.transform.position = new Vector3(worldLeft - boundSize.x / 2, 0 , 0);
+
+            boundScale = rightBound.transform.localScale;
+            boundScale.y = yScale;
+            rightBound.transform.localScale = boundScale;
+            rightBound.transform.position = new Vector3(worldRight + boundSize.x / 2, 0 , 0);
+
+
         }
     }
 
     private Vector3 PartialGravity(Rigidbody ballRb, Rigidbody attractorRb)
     {
+        // Adding extra term to magnitute for safe keeping. With collisions turned off the distance
+        // between two objects can get to close (not possible for real physical objects - no material points).
+        // Without this the adding force becomes extremely strong and we have jumps over colliders
+        // because of discrete collision detection
+        
         Vector3 distVec = attractorRb.transform.position - ballRb.transform.position;
-        float magnitude = distVec.sqrMagnitude + 0.00001f; 
+        float magnitude = distVec.sqrMagnitude + 0.001f; 
         return (attractorRb.mass / (magnitude * Mathf.Sqrt(magnitude))) * distVec;
         
     }
@@ -149,13 +184,15 @@ public class GameManagerScript : MonoBehaviour
         
         InvokeRepeating("ActivateBalls", 0.5f, 0.25f);
         InvokeRepeating("PrintInfo", 0f, 2f);
+        Physics.IgnoreLayerCollision(8, 8);
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        EnableCollision(false);
+        //EnableCollision(false);
+        //BoundSetup();
         
         
     }
