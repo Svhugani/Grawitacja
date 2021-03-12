@@ -88,24 +88,69 @@ public class GameManagerScript : MonoBehaviour
     {
         Vector3 totalForce = Vector3.zero;
         Rigidbody ballRb = ballSc.BallRigidBody;
+        float size = ballSc.transform.localScale.x;
+        bool returnBall = true;
+        _listOfActiveBalls.Remove(ballSc);
 
-        _iterateOverBalls.Remove(ballSc);
-
-        foreach ( BallScript otherBallRb in  _iterateOverBalls)
+        foreach ( BallScript otherBallSc in  _listOfActiveBalls.ToArray())
         {
+            Vector3 distVec = otherBallSc.BallRigidBody.position - ballRb.position;
+            float magnitude = distVec.magnitude;
+            float otherSize = otherBallSc.transform.localScale.x;
 
-            totalForce += PartialGravity(ballRb, otherBallRb.BallRigidBody);
-            
+            if( magnitude <(0.5000001 * size + otherSize)  )
+            {
+                if(ballRb.mass > otherBallSc.BallRigidBody.mass)
+                {
+                    float f = Mathf.Sqrt(1 + otherSize / size);
+                    ballRb.mass = Mathf.Pow(f, 3);
+                    ballSc.transform.localScale = f * ballSc.transform.localScale;
+                    _listOfActiveBalls.Remove(otherBallSc);
+                    _listOfDeactivatedBalls.Add(otherBallSc);
+                    otherBallSc.SetStatusActive(false);
+                    //_listOfActiveBalls.Add(ballSc);                   
+                }
+                
+                else
+                {
+                    float f = Mathf.Sqrt(1 + size / otherSize);
+                    ballRb.mass = Mathf.Pow(f, 3);
+                    otherBallSc.transform.localScale = f * otherBallSc.transform.localScale;
+                    _listOfActiveBalls.Remove(ballSc);
+                    _listOfDeactivatedBalls.Add(ballSc);
+                    ballSc.SetStatusActive(false);
+                    returnBall = false;    
+                }
+                
+                _numOfActiveBalls --;
+                _numOfDeactivatedBalls ++;
+                break;
+
+            }
+
+            else
+            {
+                //totalForce += PartialGravity(ballRb, otherBallSc.BallRigidBody);
+                //totalForce += (otherBallSc.BallRigidBody.mass / (magnitude * Mathf.Sqrt(magnitude))) * distVec;
+                totalForce += (otherBallSc.BallRigidBody.mass / ( Mathf.Pow(magnitude, 3))) * distVec;
+            }
+                
         }
-        _iterateOverBalls.Add(ballSc);
+
+        if (returnBall)
+        {
+            _listOfActiveBalls.Add(ballSc);
+        }
+        //_listOfActiveBalls.Add(ballSc);
         totalForce = _gravityConstant * ballRb.mass * totalForce;
         return totalForce;
     }
 
     private void SystemGravity()
     {
-        foreach (BallScript ballSc in _listOfActiveBalls)
+        foreach (BallScript ballSc in _listOfActiveBalls.ToArray())
         {
+
             //Rigidbody rb = ballSc.BallRigidBody;
             //rb.AddForce(TotalGravity(ballSc));
             ballSc.Interact(TotalGravity(ballSc));
