@@ -9,7 +9,6 @@ public class BallScript : MonoBehaviour
     private Vector3 _globalForce = Vector3.zero;
     private float _mass = 1f;
     private int _madeOfComponents = 1;
-
     public Rigidbody BallRigidBody
     {
         get {return _rigidbody;}
@@ -30,9 +29,9 @@ public class BallScript : MonoBehaviour
         set {_mass = value;}
     }
 
-    public void Interact()
+    public void Interact(Vector3 force)
     {
-        _rigidbody.AddForce(_globalForce);
+        _rigidbody.AddForce(force);
     }
 
     public void SetStatusActive(bool status)
@@ -50,6 +49,11 @@ public class BallScript : MonoBehaviour
         if (collision.collider.gameObject.layer == 0)
         {
             Debug.Log("COLLISION !");   
+        }
+
+        if (collision.gameObject.layer == 8)
+        {
+            //this.transform.localScale = 2 * this.transform.localScale;
         }
     }
 
