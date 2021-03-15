@@ -14,15 +14,26 @@ public class GameManagerScript : MonoBehaviour
     public GameObject rightBound;
     public GameObject leftBound;
     private List<BallScript> _listOfActiveBalls;
-    private List<BallScript> _iterateOverBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
     private float _gravityConstant = .05f;
+    private float _initMass;
+    private Vector3 _initScale;
+    private float _randomForce = 100f;
+    private bool _isConnectionEnabled = true;
+
 
     private void PrintInfo()
     {
         Debug.Log("Number of active balls: " + _numOfActiveBalls.ToString());
+        Debug.Log("Number of deactivated balls: " + _numOfDeactivatedBalls.ToString());
     
+    }
+
+    private void EnableConnecitons()
+    {
+        _isConnectionEnabled = true;
+        Debug.Log("CONNECTIONS ENABLED !!!!!!");
     }
 
     private void BoundSetup()
@@ -71,10 +82,6 @@ public class GameManagerScript : MonoBehaviour
 
     private Vector3 PartialGravity(Rigidbody ballRb, Rigidbody attractorRb)
     {
-        // Adding extra term to magnitute for safe keeping. With collisions turned off the distance
-        // between two objects can get to close (not possible for real physical objects - no material points).
-        // Without this the adding force becomes extremely strong and we have jumps over colliders
-        // because of discrete collision detection
         
         Vector3 distVec = attractorRb.position - ballRb.position;
         float magnitude = distVec.sqrMagnitude; 
@@ -83,6 +90,42 @@ public class GameManagerScript : MonoBehaviour
         
     }
 
+    private void SplitBall(BallScript Ballsc)
+    {   
+        Debug.Log("SPLITTING BALL");
+        _isConnectionEnabled = false;
+        Ballsc.BallRigidBody.mass = _initMass;
+        Vector3 randomDirection;
+        randomDirection = Random.onUnitSphere;
+        randomDirection.z = 0;
+        Ballsc.gameObject.transform.localScale = _initScale;
+        Ballsc.Interact(_randomForce * randomDirection);
+        Vector3 targetPos = Ballsc.gameObject.transform.position;
+
+        int ballsToAdd = Mathf.Min(_numOfDeactivatedBalls, Ballsc.MadeOfComponents) - 1;
+        int i = 0;
+
+        Ballsc.MadeOfComponents = 1;
+
+        while (i < ballsToAdd)
+        {
+            BallScript otherBallsc = _listOfDeactivatedBalls[0];
+            otherBallsc.SetStatusActive(true);
+            _listOfActiveBalls.Add(otherBallsc);
+            _listOfDeactivatedBalls.Remove(otherBallsc);
+            _numOfActiveBalls ++;
+            _numOfDeactivatedBalls --;
+            otherBallsc.gameObject.transform.localScale = _initScale;
+            otherBallsc.gameObject.transform.position = targetPos;
+            otherBallsc.BallRigidBody.mass = _initMass;
+            randomDirection = Random.onUnitSphere;
+            randomDirection.z = 0;
+            otherBallsc.Interact(_randomForce * randomDirection);
+            otherBallsc.MadeOfComponents = 1;
+            i ++;
+        }
+        Invoke("EnableConnecitons", .5f);
+    }
 
     private Vector3 TotalGravity(BallScript ballSc)
     {
@@ -91,47 +134,48 @@ public class GameManagerScript : MonoBehaviour
         float size = ballSc.transform.localScale.x;
         bool returnBall = true;
         _listOfActiveBalls.Remove(ballSc);
+        Vector3 pos = ballSc.gameObject.transform.position;
 
         foreach ( BallScript otherBallSc in  _listOfActiveBalls.ToArray())
         {
-            Vector3 distVec = otherBallSc.BallRigidBody.position - ballRb.position;
+            Vector3 distVec = otherBallSc.gameObject.transform.position - pos;
             float magnitude = distVec.magnitude;
             float otherSize = otherBallSc.transform.localScale.x;
+            
 
-            if( magnitude <(0.5000001 * size + otherSize)  )
+
+            if( magnitude <= 0.501 * (size + otherSize)  )
             {
-                if(ballRb.mass > otherBallSc.BallRigidBody.mass)
+                if(ballRb.mass >= otherBallSc.BallRigidBody.mass)
                 {
                     float f = Mathf.Sqrt(1 + otherSize / size);
-                    ballRb.mass = Mathf.Pow(f, 3);
+                    ballRb.mass = Mathf.Pow(f, 3) * ballRb.mass;
                     ballSc.transform.localScale = f * ballSc.transform.localScale;
                     _listOfActiveBalls.Remove(otherBallSc);
                     _listOfDeactivatedBalls.Add(otherBallSc);
-                    otherBallSc.SetStatusActive(false);
-                    //_listOfActiveBalls.Add(ballSc);                   
+                    otherBallSc.SetStatusActive(false);    
+                    ballSc.MadeOfComponents ++;
+                    _numOfActiveBalls --;
+                    _numOfDeactivatedBalls ++;          
                 }
                 
                 else
                 {
                     float f = Mathf.Sqrt(1 + size / otherSize);
-                    ballRb.mass = Mathf.Pow(f, 3);
+                    otherBallSc.BallRigidBody.mass = Mathf.Pow(f, 3) * otherBallSc.BallRigidBody.mass;
                     otherBallSc.transform.localScale = f * otherBallSc.transform.localScale;
-                    _listOfActiveBalls.Remove(ballSc);
                     _listOfDeactivatedBalls.Add(ballSc);
                     ballSc.SetStatusActive(false);
                     returnBall = false;    
+                    otherBallSc.MadeOfComponents ++;
+                    _numOfActiveBalls --;
+                    _numOfDeactivatedBalls ++;
                 }
-                
-                _numOfActiveBalls --;
-                _numOfDeactivatedBalls ++;
                 break;
-
             }
 
             else
             {
-                //totalForce += PartialGravity(ballRb, otherBallSc.BallRigidBody);
-                //totalForce += (otherBallSc.BallRigidBody.mass / (magnitude * Mathf.Sqrt(magnitude))) * distVec;
                 totalForce += (otherBallSc.BallRigidBody.mass / ( Mathf.Pow(magnitude, 3))) * distVec;
             }
                 
@@ -141,7 +185,7 @@ public class GameManagerScript : MonoBehaviour
         {
             _listOfActiveBalls.Add(ballSc);
         }
-        //_listOfActiveBalls.Add(ballSc);
+
         totalForce = _gravityConstant * ballRb.mass * totalForce;
         return totalForce;
     }
@@ -150,12 +194,23 @@ public class GameManagerScript : MonoBehaviour
     {
         foreach (BallScript ballSc in _listOfActiveBalls.ToArray())
         {
+            if(ballSc.transform.gameObject.activeSelf)
+            {
+                if (ballSc.MadeOfComponents > _numOfBallsToSplit)
+                {
+                    SplitBall(ballSc);
+                }
+                else
+                {
+                    if (_isConnectionEnabled)
+                    {
+                        ballSc.Interact(TotalGravity(ballSc));
+                    }   
+                }
+            }
 
-            //Rigidbody rb = ballSc.BallRigidBody;
-            //rb.AddForce(TotalGravity(ballSc));
-            ballSc.Interact(TotalGravity(ballSc));
-            //ballRb.BallRigidBody.AddForce(TotalGravity(ballRb.BallRigidBody));
-            //ballRb.Interact(TotalGravity(ballRb.BallRigidBody));
+
+            
         }
     }
 
@@ -175,23 +230,6 @@ public class GameManagerScript : MonoBehaviour
                 item.BallCollider.isTrigger = true;
             }            
         }
-    }
-
-    private void GenerateBall()
-    {
-        if (_numOfActiveBalls < _maxNumOfBalls)
-        {
-            float rx = Random.Range(0f, 1f);
-            float ry = Random.Range(0f, 1f);
-            Vector3 ballpos = cam.ViewportToWorldPoint(new Vector3(rx, ry, 0));
-            ballpos.z = 0f;
-            GameObject ball = Instantiate(ballPrefab, ballpos, Quaternion.identity);
-            BallScript ballRb = ball.GetComponent<BallScript>();
-            _listOfActiveBalls.Add(ballRb);
-            _numOfActiveBalls++;
-            //ballRb.transform.parent.gameObject.SetActive(false);
-            //ballRb.transform.gameObject.SetActive(false);
-        }    
     }
 
     private void GenerateBalls()
@@ -238,17 +276,17 @@ public class GameManagerScript : MonoBehaviour
         cam = Camera.main;
         _listOfActiveBalls = new List<BallScript>();
         _listOfDeactivatedBalls = new List<BallScript>();
-        _iterateOverBalls = new List<BallScript>();
         GenerateBalls();
-        //EnableCollision(false);
         BoundSetup();
+        _initMass = _listOfDeactivatedBalls[0].BallRigidBody.mass;
+        _initScale = _listOfDeactivatedBalls[0].gameObject.transform.localScale;
     }
 
     // Start is called before the first frame update
     void Start()
     {
         
-        InvokeRepeating("ActivateBall", 0.5f, 0.1f);
+        InvokeRepeating("ActivateBall", 0.5f, 0.05f);
         InvokeRepeating("PrintInfo", 0f, 4f);
         //Physics.IgnoreLayerCollision(8, 8);
 
@@ -257,10 +295,7 @@ public class GameManagerScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //EnableCollision(false);
-        //BoundSetup();
-        
-        
+   
     }
 
     void FixedUpdate()
