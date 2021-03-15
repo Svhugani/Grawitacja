@@ -29,6 +29,12 @@ public class BallScript : MonoBehaviour
         set {_mass = value;}
     }
 
+    public int MadeOfComponents
+    {
+        get {return _madeOfComponents;}
+        set {_madeOfComponents = value;}
+    }
+
     public void Interact(Vector3 force)
     {
         _rigidbody.AddForce(force);

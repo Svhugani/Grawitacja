@@ -757,6 +757,7 @@ MonoBehaviour:
   lowerBound: {fileID: 975572885}
   rightBound: {fileID: 1393030840}
   leftBound: {fileID: 526039811}
+  _maxInitMasses: 20
 --- !u!4 &1612724175
 Transform:
   m_ObjectHideFlags: 0
