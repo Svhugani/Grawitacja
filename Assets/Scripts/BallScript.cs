@@ -93,6 +93,6 @@ public class BallScript : MonoBehaviour
 
     void FixedUpdate()
     {
-
+       // _mass = _rigidbody.mass;
     }
 }

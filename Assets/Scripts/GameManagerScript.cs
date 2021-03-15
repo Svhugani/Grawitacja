@@ -91,9 +91,10 @@ public class GameManagerScript : MonoBehaviour
     }
 
     private void SplitBall(BallScript Ballsc)
-    {
+    {   
+        Debug.Log("SPLITTING BALL");
         _isConnectionEnabled = false;
-        Ballsc.Mass = _initMass;
+        Ballsc.BallRigidBody.mass = _initMass;
         Vector3 randomDirection;
         randomDirection = Random.onUnitSphere;
         randomDirection.z = 0;
@@ -116,16 +117,14 @@ public class GameManagerScript : MonoBehaviour
             _numOfDeactivatedBalls --;
             otherBallsc.gameObject.transform.localScale = _initScale;
             otherBallsc.gameObject.transform.position = targetPos;
-            otherBallsc.Mass = _initMass;
+            otherBallsc.BallRigidBody.mass = _initMass;
             randomDirection = Random.onUnitSphere;
             randomDirection.z = 0;
             otherBallsc.Interact(_randomForce * randomDirection);
             otherBallsc.MadeOfComponents = 1;
-            _numOfActiveBalls ++;
-
             i ++;
         }
-        Invoke("EnableConnections", 2f);
+        Invoke("EnableConnecitons", .5f);
     }
 
     private Vector3 TotalGravity(BallScript ballSc)
@@ -135,10 +134,11 @@ public class GameManagerScript : MonoBehaviour
         float size = ballSc.transform.localScale.x;
         bool returnBall = true;
         _listOfActiveBalls.Remove(ballSc);
+        Vector3 pos = ballSc.gameObject.transform.position;
 
         foreach ( BallScript otherBallSc in  _listOfActiveBalls.ToArray())
         {
-            Vector3 distVec = otherBallSc.BallRigidBody.position - ballRb.position;
+            Vector3 distVec = otherBallSc.gameObject.transform.position - pos;
             float magnitude = distVec.magnitude;
             float otherSize = otherBallSc.transform.localScale.x;
             
@@ -149,28 +149,29 @@ public class GameManagerScript : MonoBehaviour
                 if(ballRb.mass >= otherBallSc.BallRigidBody.mass)
                 {
                     float f = Mathf.Sqrt(1 + otherSize / size);
-                    ballRb.mass = Mathf.Pow(f, 3);
+                    ballRb.mass = Mathf.Pow(f, 3) * ballRb.mass;
                     ballSc.transform.localScale = f * ballSc.transform.localScale;
                     _listOfActiveBalls.Remove(otherBallSc);
                     _listOfDeactivatedBalls.Add(otherBallSc);
                     otherBallSc.SetStatusActive(false);    
-                    ballSc.MadeOfComponents ++;          
+                    ballSc.MadeOfComponents ++;
+                    _numOfActiveBalls --;
+                    _numOfDeactivatedBalls ++;          
                 }
                 
                 else
                 {
                     float f = Mathf.Sqrt(1 + size / otherSize);
-                    otherBallSc.BallRigidBody.mass = Mathf.Pow(f, 3);
+                    otherBallSc.BallRigidBody.mass = Mathf.Pow(f, 3) * otherBallSc.BallRigidBody.mass;
                     otherBallSc.transform.localScale = f * otherBallSc.transform.localScale;
-                    _listOfActiveBalls.Remove(ballSc);
+                    //_listOfActiveBalls.Remove(ballSc);
                     _listOfDeactivatedBalls.Add(ballSc);
                     ballSc.SetStatusActive(false);
                     returnBall = false;    
                     otherBallSc.MadeOfComponents ++;
+                    _numOfActiveBalls --;
+                    _numOfDeactivatedBalls ++;
                 }
-                
-                _numOfActiveBalls --;
-                _numOfDeactivatedBalls ++;
                 break;
             }
 
@@ -198,10 +199,14 @@ public class GameManagerScript : MonoBehaviour
             {
                 SplitBall(ballSc);
             }
-            if (_isConnectionEnabled)
+            else
             {
-                ballSc.Interact(TotalGravity(ballSc));
+                if (_isConnectionEnabled)
+                {
+                    ballSc.Interact(TotalGravity(ballSc));
+                }   
             }
+
             
         }
     }
@@ -270,7 +275,7 @@ public class GameManagerScript : MonoBehaviour
         _listOfDeactivatedBalls = new List<BallScript>();
         GenerateBalls();
         BoundSetup();
-        _initMass = _listOfDeactivatedBalls[0].Mass;
+        _initMass = _listOfDeactivatedBalls[0].BallRigidBody.mass;
         _initScale = _listOfDeactivatedBalls[0].gameObject.transform.localScale;
     }
 
