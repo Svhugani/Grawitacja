@@ -17,7 +17,7 @@ public class GameManagerScript : MonoBehaviour
     private List<BallScript> _listOfActiveBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
-    private float _gravityConstant = .05f;
+    private float _gravityConstant = .08f;
     private float _initMass;
     private Vector3 _initScale;
     private float _randomForce = 100f;
@@ -46,6 +46,14 @@ public class GameManagerScript : MonoBehaviour
         if (_randomPhysics < 0.004)
         {
             _forceType *= -1;
+            foreach (BallScript ballSc in _listOfActiveBalls)
+            {
+                ballSc.SwitchColor(_forceType);
+            }
+            foreach (BallScript ballSc in _listOfDeactivatedBalls)
+            {
+                ballSc.SwitchColor(_forceType);
+            }
         }
     }
 

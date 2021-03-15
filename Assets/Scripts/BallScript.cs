@@ -9,8 +9,9 @@ public class BallScript : MonoBehaviour
     private Vector3 _globalForce = Vector3.zero;
     private float _mass = 1f;
     private int _madeOfComponents = 1;
-    private Color _attractionColor = new Color(110, 88, 191);
-    private Color _repulsionColor = Color.red;
+
+    private Color _attractionColor;
+    private Color _repulsionColor;
 
     private Renderer _renderer;
     public Rigidbody BallRigidBody
@@ -94,6 +95,8 @@ public class BallScript : MonoBehaviour
         //setup render
         _renderer = this.GetComponent<Renderer>();
         _renderer.material.EnableKeyword("_EMISSION");
+        _attractionColor = new Color(1.220106f, 0.9760846f + Random.Range(0f, 1f), 2.118547f, 0.25f);
+        _repulsionColor = new Color(2.22f, 0.1f + Random.Range(0f, 1f), 0.2f, 0.3f);
         
     }
 
