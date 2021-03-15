@@ -164,7 +164,6 @@ public class GameManagerScript : MonoBehaviour
                     float f = Mathf.Sqrt(1 + size / otherSize);
                     otherBallSc.BallRigidBody.mass = Mathf.Pow(f, 3) * otherBallSc.BallRigidBody.mass;
                     otherBallSc.transform.localScale = f * otherBallSc.transform.localScale;
-                    //_listOfActiveBalls.Remove(ballSc);
                     _listOfDeactivatedBalls.Add(ballSc);
                     ballSc.SetStatusActive(false);
                     returnBall = false;    
@@ -195,17 +194,21 @@ public class GameManagerScript : MonoBehaviour
     {
         foreach (BallScript ballSc in _listOfActiveBalls.ToArray())
         {
-            if (ballSc.MadeOfComponents > _numOfBallsToSplit)
+            if(ballSc.transform.gameObject.activeSelf)
             {
-                SplitBall(ballSc);
-            }
-            else
-            {
-                if (_isConnectionEnabled)
+                if (ballSc.MadeOfComponents > _numOfBallsToSplit)
                 {
-                    ballSc.Interact(TotalGravity(ballSc));
-                }   
+                    SplitBall(ballSc);
+                }
+                else
+                {
+                    if (_isConnectionEnabled)
+                    {
+                        ballSc.Interact(TotalGravity(ballSc));
+                    }   
+                }
             }
+
 
             
         }
@@ -283,7 +286,7 @@ public class GameManagerScript : MonoBehaviour
     void Start()
     {
         
-        InvokeRepeating("ActivateBall", 0.5f, 0.1f);
+        InvokeRepeating("ActivateBall", 0.5f, 0.05f);
         InvokeRepeating("PrintInfo", 0f, 4f);
         //Physics.IgnoreLayerCollision(8, 8);
 
