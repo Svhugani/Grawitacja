@@ -9,6 +9,10 @@ public class BallScript : MonoBehaviour
     private Vector3 _globalForce = Vector3.zero;
     private float _mass = 1f;
     private int _madeOfComponents = 1;
+    private Color _attractionColor = new Color(110, 88, 191);
+    private Color _repulsionColor = Color.red;
+
+    private Renderer _renderer;
     public Rigidbody BallRigidBody
     {
         get {return _rigidbody;}
@@ -35,6 +39,17 @@ public class BallScript : MonoBehaviour
         set {_madeOfComponents = value;}
     }
 
+    public void SwitchColor(int flag)
+    {
+        if (flag == 1)
+        {
+            _renderer.material.SetColor("_EmissionColor", _attractionColor);
+        }
+        else 
+        {
+            _renderer.material.SetColor("_EmissionColor", _repulsionColor);
+        }
+    }
     public void Interact(Vector3 force)
     {
         _rigidbody.AddForce(force);
@@ -65,7 +80,7 @@ public class BallScript : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        //Debug.Log("TRIGGERRRED !");
+
     }
     void Awake()
     {
@@ -76,13 +91,16 @@ public class BallScript : MonoBehaviour
         _rigidbody.constraints = RigidbodyConstraints.FreezePositionZ;
         _rigidbody.mass = _mass;
 
+        //setup render
+        _renderer = this.GetComponent<Renderer>();
+        _renderer.material.EnableKeyword("_EMISSION");
         
     }
 
-    // Start is called before the first frame update
+
     void Start()
     {
-        //transform.gameObject.SetActive(false);
+
     }
 
     // Update is called once per frame
@@ -93,6 +111,6 @@ public class BallScript : MonoBehaviour
 
     void FixedUpdate()
     {
-       // _mass = _rigidbody.mass;
+   
     }
 }

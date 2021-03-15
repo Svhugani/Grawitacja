@@ -13,6 +13,7 @@ public class GameManagerScript : MonoBehaviour
     public GameObject lowerBound;
     public GameObject rightBound;
     public GameObject leftBound;
+    public GameObject background;
     private List<BallScript> _listOfActiveBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
@@ -21,6 +22,8 @@ public class GameManagerScript : MonoBehaviour
     private Vector3 _initScale;
     private float _randomForce = 100f;
     private bool _isConnectionEnabled = true;
+    private int _forceType = 1;
+    private float _randomPhysics;
 
 
     private void PrintInfo()
@@ -36,6 +39,16 @@ public class GameManagerScript : MonoBehaviour
         Debug.Log("CONNECTIONS ENABLED !!!!!!");
     }
 
+    private void RandomSwitchForceType()
+    {
+        _randomPhysics = Random.Range(0f, 1f);
+        // on average switch physics every 5 sec
+        if (_randomPhysics < 0.004)
+        {
+            _forceType *= -1;
+        }
+    }
+
     private void BoundSetup()
     {   
         // Set up bounding scene depending on your screen resolution / ratio.
@@ -45,6 +58,11 @@ public class GameManagerScript : MonoBehaviour
         Renderer rend = upperBound.GetComponent<Renderer>();
         Vector3 boundSize = rend.bounds.size;
         Vector3 boundScale;
+
+        upperBound.GetComponent<MeshRenderer>().enabled = false;
+        lowerBound.GetComponent<MeshRenderer>().enabled = false;
+        rightBound.GetComponent<MeshRenderer>().enabled = false;
+        leftBound.GetComponent<MeshRenderer>().enabled = false;
 
         if (cam)
         {
@@ -78,6 +96,13 @@ public class GameManagerScript : MonoBehaviour
 
 
         }
+    }
+
+    private void SetUpBackground()
+    {
+        float xScale = cam.ViewportToWorldPoint(new Vector3(1, 0, 0)).x - cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).x;
+        float yScale = cam.ViewportToWorldPoint(new Vector3(0, 1, 0)).y - cam.ViewportToWorldPoint(new Vector3(0, 0, 0)).y;
+        background.transform.localScale = new Vector3(xScale, yScale ,1);
     }
 
     private Vector3 PartialGravity(Rigidbody ballRb, Rigidbody attractorRb)
@@ -176,7 +201,7 @@ public class GameManagerScript : MonoBehaviour
 
             else
             {
-                totalForce += (otherBallSc.BallRigidBody.mass / ( Mathf.Pow(magnitude, 3))) * distVec;
+                totalForce += _forceType * (otherBallSc.BallRigidBody.mass / ( Mathf.Pow(magnitude, 3))) * distVec;
             }
                 
         }
@@ -278,6 +303,7 @@ public class GameManagerScript : MonoBehaviour
         _listOfDeactivatedBalls = new List<BallScript>();
         GenerateBalls();
         BoundSetup();
+        SetUpBackground();
         _initMass = _listOfDeactivatedBalls[0].BallRigidBody.mass;
         _initScale = _listOfDeactivatedBalls[0].gameObject.transform.localScale;
     }
@@ -302,5 +328,6 @@ public class GameManagerScript : MonoBehaviour
     {
         
         SystemGravity();
+        RandomSwitchForceType();
     }
 }
