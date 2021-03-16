@@ -17,7 +17,7 @@ public class GameManagerScript : MonoBehaviour
     private List<BallScript> _listOfActiveBalls;
     private List<BallScript> _listOfDeactivatedBalls;  
     private Camera cam;
-    private float _gravityConstant = .08f;
+    private float _gravityConstant = .15f;
     private float _initMass;
     private Vector3 _initScale;
     private float _randomForce = 100f;
