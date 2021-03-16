@@ -33,7 +33,7 @@ public class GameManagerScript : MonoBehaviour
     private void EnableConnecitons()
     {
         _isConnectionEnabled = true;
-        Debug.Log("CONNECTIONS ENABLED !!!!!!");
+        //Debug.Log("CONNECTIONS ENABLED !!!!!!");
     }
 
     private void BoundSetup()
@@ -124,7 +124,7 @@ public class GameManagerScript : MonoBehaviour
             otherBallsc.MadeOfComponents = 1;
             i ++;
         }
-        Invoke("EnableConnecitons", .5f);
+        Invoke("EnableConnecitons", .2f);
     }
 
     private Vector3 TotalGravity(BallScript ballSc)
